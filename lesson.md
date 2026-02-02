@@ -1,11 +1,5 @@
 # Lesson 4.13: DevSecOps Foundations
 
-**Module 4: DevSecOps**  
-**Duration:** 3 hours  
-**Level:** Beginner
-
----
-
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:
@@ -1363,8 +1357,3 @@ If ANY scan fails → Pipeline stops!
 
 ---
 
-**End of Lesson 4.13**
-
-**Congratulations!** You now understand the fundamentals of DevSecOps and why security must be integrated throughout the development lifecycle. In the next lesson, you'll put these concepts into practice! 🎉
-
-**Next Lesson:** Lesson 4.14 - DevSecOps Practicals (Hands-on Implementation)
