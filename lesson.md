@@ -17,7 +17,7 @@ By the end of this lesson, you will be able to:
 Before starting this lesson, ensure you have:
 
 - Completed Lesson 4.7 (CI with CircleCI)
-- Completed Lesson 4.12 (Continuous Deployment)
+- Completed Lesson 4.12 (Continuous Deployment to Railway)
 - Understanding of CI/CD pipelines
 - Basic understanding of Docker
 
@@ -25,7 +25,7 @@ Before starting this lesson, ensure you have:
 
 ## Introduction
 
-In previous lessons, you learned to build automated CI/CD pipelines that build, test, and deploy applications. But there's a critical piece missing: **security**.
+In previous lessons, you learned to build automated CI/CD pipelines that build, test, publish, and deploy applications. But there's a critical piece missing: **security**.
 
 Traditional approaches treated security as a final step before deployment - security teams would review code at the end. This caused delays, expensive fixes, and sometimes security vulnerabilities reaching production.
 
@@ -519,6 +519,7 @@ https://www.aquasec.com/cloud-native-academy/supply-chain-security/ci-cd-pipelin
 - OAuth client secrets
 - Encryption keys
 - Service account credentials
+- Railway API tokens
 
 ---
 
@@ -1327,7 +1328,7 @@ If ANY scan fails → Pipeline stops!
 5. See how security checks prevent vulnerable code from deploying
 
 **What to review before next lesson:**
-- Your CircleCI config from Lesson 4.7
+- Your CircleCI config from Lesson 4.12
 - Your devops-demo project structure
 - How to edit .circleci/config.yml
 
@@ -1357,3 +1358,6 @@ If ANY scan fails → Pipeline stops!
 
 ---
 
+**End of Lesson 4.13**
+
+**Great work!** You now understand the foundations of DevSecOps. In Lesson 4.14, you'll put this knowledge into practice by adding automated security scanning to your CI/CD pipeline!
