@@ -55,7 +55,9 @@ Practice DevSecOps principles by implementing secure secrets management and unde
 
 ## Submission (Optional)
 
-- Submit the URL of the GitHub Repository that contains your work.
+- Submit the URL of the GitHub Repository that contains your work to NTU black board.
+- Should you reference the work of your classmate(s) or online resources, give them credit by adding either the name of your classmate or URL.
+
 ## References
 - Java: https://docs.oracle.com/javase/
 - Spring Boot: https://docs.spring.io/spring-boot/docs/current/reference/html/
